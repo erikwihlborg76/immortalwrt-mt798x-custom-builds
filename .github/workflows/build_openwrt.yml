@@ -15,7 +15,7 @@ jobs:
       OPENWRT_TAG: "v24.10.3"
 
       # ---- CUSTOM REPO (patches, configs, files) ----
-      CUSTOM_REPO: "https://github.com/erikwihlborg76/immortalwrt-ex5601-custom"
+      CUSTOM_REPO: "https://github.com/erikwihlborg76/ex5601-custom-builds"
       CUSTOM_BRANCH: "main"
 
       # ---- TARGET / PROFILE ----
