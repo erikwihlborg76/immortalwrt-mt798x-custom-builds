@@ -1,0 +1,43 @@
+From 72b95f00214e35c41eee5f72cd165360d80bfb92 Mon Sep 17 00:00:00 2001
+From: Erik <erikwihlborg76@gmail.com>
+Date: Tue, 23 Sep 2025 08:27:10 +0200
+Subject: [PATCH] Added DFS support
+
+Signed-off-by: Erik <erikwihlborg76@gmail.com>
+---
+ .../mtwifi-cfg/files/mtwifi-cfg/mtwifi_cfg    | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/package/mtk/applications/mtwifi-cfg/files/mtwifi-cfg/mtwifi_cfg b/package/mtk/applications/mtwifi-cfg/files/mtwifi-cfg/mtwifi_cfg
+index 59af8d48cc..ee5ba5932b 100755
+--- a/package/mtk/applications/mtwifi-cfg/files/mtwifi-cfg/mtwifi_cfg
++++ b/package/mtk/applications/mtwifi-cfg/files/mtwifi-cfg/mtwifi_cfg
+@@ -423,6 +423,25 @@ function mtwifi_cfg_setup(argv)
+     if cfg.config.channel == "auto" then
+         dats.AutoChannelSelect = 3
+         dats.Channel = 0
++        if cfg.config.band == "5g" then
++            local entry = defs.countryRegions[cfg.config.country]  -- {2g_idx, 5g_idx, regdomain}
++            if entry and entry[2] ~= nil then                      -- ensure we have a 5 GHz region index
++                local rd = entry[3]                                -- "CE", "FCC", "JAP", or "NA"
++                if rd ~= "NA" then
++                    dats.RDRegion = rd
++                    dats.IEEE80211H = 1
++                    dats.DfsEnable = 1
++                    dats.DfsDedicatedZeroWait = 3
++                    dats.DfsZeroWait = 1
++                    dats.DfsZeroWaitCacTime = 255
++                    dats.DfsZeroWaitDefault = 1
++                else
++                    -- Explicitly disable DFS in NA markets
++                    dats.IEEE80211H = 0
++                    dats.DfsEnable = 0
++                end
++            end
++        end        
+     else
+         dats.AutoChannelSelect = 0
+         dats.Channel = cfg.config.channel
+-- 
+2.51.0.windows.1
+

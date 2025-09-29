@@ -1,0 +1,36 @@
+From 64a0ce126c728a0583c7e9e38435101cd6acd17d Mon Sep 17 00:00:00 2001
+From: Erik <erikwihlborg76@gmail.com>
+Date: Sat, 20 Sep 2025 10:33:47 +0200
+Subject: [PATCH 2/3] Changed defaults to SE and disabled 802.11k and 802.11r
+
+Signed-off-by: Erik <erikwihlborg76@gmail.com>
+---
+ package/mtk/applications/mtwifi-cfg/files/mtwifi.sh | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
+index c443ac5f85..0c152edf04 100755
+--- a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
++++ b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
+@@ -44,7 +44,7 @@ detect_mtwifi() {
+ 					set wireless.${dev}.channel=${channel}
+ 					set wireless.${dev}.txpower=${txpower}
+ 					set wireless.${dev}.htmode=${htmode}
+-					set wireless.${dev}.country=CN
++					set wireless.${dev}.country=SE
+ 					set wireless.${dev}.mu_beamformer=1
+ 					set wireless.${dev}.noscan=${htbsscoex}
+ 					set wireless.${dev}.serialize=1
+@@ -55,6 +55,9 @@ detect_mtwifi() {
+ 					set wireless.default_${dev}.mode=ap
+ 					set wireless.default_${dev}.ssid=${ssid}
+ 					set wireless.default_${dev}.encryption=none
++					set wireless.default_${dev}.ieee80211k='0'
++					set wireless.default_${dev}.ieee80211r='0'
++
+ EOF
+ 				uci -q commit wireless
+ 			}
+-- 
+2.51.0.windows.1
+
