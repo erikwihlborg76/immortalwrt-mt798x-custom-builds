@@ -1,0 +1,237 @@
+name: immortalwrt-matrix-build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover-configs:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find all device configs
+        id: set-matrix
+        run: |
+          configs=()
+          for f in defconfig/*.config; do
+            [ -e "$f" ] || continue
+            base=$(basename "$f" .config)
+            configs+=("\"$base\"")
+          done
+          json=$(printf "{ \"profile\": [ %s ] }" "$(IFS=,; echo "${configs[*]}")")
+          echo "matrix=$json" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: discover-configs
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover-configs.outputs.matrix) }}
+
+    env:
+      # ---- IMMORTALWRT SOURCE ----
+      REPO_URL: "https://github.com/padavanonly/immortalwrt-mt798x-24.10"
+      BRANCH: "openwrt-24.10-6.6"
+
+      # ---- CUSTOM REPO ----
+      CUSTOM_REPO: "https://github.com/erikwihlborg76/immortalwrt-mt798x-custom-builds"
+      CUSTOM_BRANCH: "main"
+
+      # ---- TARGET / PROFILE ----
+      OWRT_TARGET: "mediatek"
+      OWRT_SUBTARGET: "filogic"
+      PROFILE: "${{ matrix.profile }}"
+      BUILD_FLAVOR: "immortalwrt"
+
+      WORKDIR: "${{ github.workspace }}/openwrt"
+
+      CCACHE_DIR: "${{ github.workspace }}/.ccache"
+      CCACHE_COMPRESS: "1"
+      SOURCE_DATE_EPOCH: "1704067200"
+
+    steps:
+      - name: Set build date
+        run: echo "BUILD_DATE=$(date +'%Y%m%d')" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+
+      - name: Free disk (GitHub runners are tiny)
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL || true
+          sudo apt-get purge -y 'azure-cli' 'mono-devel' || true
+          sudo apt-get autoremove -y
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential clang flex bison g++ gawk \
+            gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev \
+            python3 python3-distutils rsync unzip zlib1g-dev file wget \
+            subversion swig libpython3-dev ccache
+
+      - name: Fetch ImmortalWrt
+        run: |
+          git -c advice.detachedHead=false clone \
+            --single-branch --branch "${BRANCH}" \
+            --depth 1 --filter=blob:none \
+            "${REPO_URL}" "${WORKDIR}"
+
+      - name: Pull custom repo (patches, configs, files)
+        run: |
+          git clone --depth 1 --branch "${CUSTOM_BRANCH}" \
+            "${CUSTOM_REPO}" "${{ github.workspace }}/custom"
+
+      # ------------------- CACHES --------------------
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.WORKDIR }}/dl
+          key: dl-${{ runner.os }}-${{ env.BRANCH }}-${{ matrix.profile }}
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ matrix.profile }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ matrix.profile }}-
+
+      # ----------------- FEEDS -----------------------
+
+      - name: Configure feeds
+        run: |
+          cd "${WORKDIR}"
+          cp feeds.conf.default feeds.conf
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a || true
+
+      # ---------------- PATCHES ----------------------
+
+      - name: Apply all patches from custom/patches
+        run: |
+          set -eu
+          cd "${WORKDIR}"
+          PATCH_ROOT="${GITHUB_WORKSPACE}/custom/patches"
+          if [ ! -d "${PATCH_ROOT}" ]; then
+            echo "No custom/patches directory; skipping."
+            exit 0
+          fi
+
+          git config user.email "ci@localhost"
+          git config user.name  "CI"
+
+          # Gather patches deterministically
+          mapfile -t PATCHES < <(find -L "${PATCH_ROOT}" -type f \( -iname '*.patch' -o -iname '*.diff' \) | sort)
+          if [ "${#PATCHES[@]}" -eq 0 ]; then
+            echo "No patch files found under ${PATCH_ROOT}; skipping."
+            exit 0
+          fi
+
+          echo "Found ${#PATCHES[@]} patch(es). Applying now:"
+          for p in "${PATCHES[@]}"; do
+            echo " -> $(realpath --relative-to="${PATCH_ROOT}" "$p")"
+            # Normalize CRLF
+            sed -i 's/\r$//' "$p"
+
+            # Try git am first (best for format-patch)
+            if git am --keep-cr --3way --whitespace=fix "$p"; then
+              continue
+            fi
+
+            # Fallback to git apply with varying strip levels
+            git am --abort || true
+            applied=0
+            for STRIP in 0 1 2; do
+              if git apply --check --whitespace=fix -p${STRIP} "$p"; then
+                git apply --whitespace=fix -p${STRIP} "$p"
+                git add -A
+                git commit -m "Apply $(basename "$p") via git apply -p${STRIP}"
+                applied=1
+                break
+              fi
+            done
+
+            if [ $applied -eq 0 ]; then
+              echo "ERROR: Failed to apply patch: $p"
+              exit 1
+            fi
+          done
+
+      # ---------------- ROOTFS OVERLAY ---------------
+
+      - name: Rootfs overlay (optional)
+        run: |
+          set -eu
+          if [ -d "${GITHUB_WORKSPACE}/custom/files" ]; then
+            rsync -a "${GITHUB_WORKSPACE}/custom/files/" "${WORKDIR}/files/"
+          else
+            echo "No custom/files overlay; skipping."
+          fi
+
+      # ---------------- CONFIG -----------------------
+
+      - name: Inject config (baseline + device-specific)
+        run: |
+          cd "${WORKDIR}"
+
+          BASE_CFG="${GITHUB_WORKSPACE}/defconfig/mt798x_baseline.cfg"
+          DEV_CFG="${GITHUB_WORKSPACE}/defconfig/${PROFILE}.config"
+
+          if [ ! -f "$BASE_CFG" ]; then
+            echo "Missing baseline config: $BASE_CFG"
+            exit 1
+          fi
+
+          if [ ! -f "$DEV_CFG" ]; then
+            echo "Missing device config: $DEV_CFG"
+            exit 1
+          fi
+
+          echo "Using baseline: $BASE_CFG"
+          echo "Using device config: $DEV_CFG"
+
+          # baseline first, then device-specific (device overrides baseline)
+          cat "$BASE_CFG" "$DEV_CFG" > .config
+
+          # enable ccache
+          echo "CONFIG_CCACHE=y" >> .config
+
+          # expand into full .config
+          make defconfig
+
+      # ---------------- BUILD -------------------------
+
+      - name: Build firmware
+        env:
+          MAKEFLAGS: "-j$(nproc)"
+        run: |
+          cd "${WORKDIR}"
+          make download -j"$(nproc)" || make download -j1 V=s
+          ( time make -j"$(nproc)" V=sc ) 2>&1 | tee build.log
+
+      # ---------------- ARTIFACTS ---------------------
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp -a "${WORKDIR}/bin/targets/${OWRT_TARGET}/${OWRT_SUBTARGET}/"* artifacts/ || true
+          cp "${WORKDIR}/.config" artifacts/
+          cp "${WORKDIR}/build.log" artifacts/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ env.PROFILE }}-${{ env.BUILD_DATE }}
+          path: artifacts/
+          retention-days: 14

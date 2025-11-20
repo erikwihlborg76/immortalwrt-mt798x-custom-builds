@@ -1,11 +1,15 @@
-# Experimental ImmortalWrt Builds for Zyxel EX5601
+# Experimental ImmortalWrt Builds for mt798x
 
-This repository provides **experimental builds** for the **Zyxel EX5601-T0 (ubootmod)**, based on [**padavanonly/immortalwrt-mt798x-6.6**](https://github.com/padavanonly/immortalwrt-mt798x-6.6).
+This repository provides **experimental builds** based on [**padavanonly/immortalwrt-mt798x-6.6**](https://github.com/padavanonly/immortalwrt-mt798x-6.6).
+
+Current targets:
+
+- **Zyxel EX5601-T0 (ubootmod)**
+- **GL.iNet GL-MT3000 / Beryl AX**
 
 ## Key Differences from padavanonly/immortalwrt-mt798x-6.6
 
 - Retains all essential **MediaTek Wi-Fi features** from the upstream build.
-- Simplified from **multi-profile builds** to a **single target: zyxel_ex5601-t0-ubootmod**.
 - Default language set to **English**, with Wi-Fi region defaulting to **Sweden (SE)**.
 - Added the full **SQM stack** (usable only when vendor WAN/LAN acceleration is disabled --- enabled by default).
 - Enabled **DFS** and vendor-specific **DFS Zero-Wait** support for countries with a valid regulatory domain mapping.
@@ -23,10 +27,3 @@ To enable DFS:
 
 1. Ensure the selected Wi-Fi country has a valid regulatory domain mapping (see `patches/0001-Added-regdomain-field-and-corrected-serveral-allowed.patch`).
 2. Set the 5 GHz Wi-Fi channel to **"auto"**.
-
-## Build Process
-
-Builds are automated through **GitHub Actions**:
-
-- Sources are pulled from [padavanonly/immortalwrt-mt798x-24.10](https://github.com/padavanonly/immortalwrt-mt798x-24.10).
-- This repo's **patches** and device-specific **.config** are applied before compilation.
