@@ -27,6 +27,12 @@ jobs:
             base=$(basename "$f" .config)
             configs+=("\"$base\"")
           done
+
+          if [ "${#configs[@]}" -eq 0 ]; then
+            echo "No defconfig/*.config files found!"
+            exit 1
+          fi
+
           json=$(printf "{ \"profile\": [ %s ] }" "$(IFS=,; echo "${configs[*]}")")
           echo "matrix=$json" >> "$GITHUB_OUTPUT"
 
@@ -211,26 +217,35 @@ jobs:
           # expand into full .config
           make defconfig
 
-      # ---------------- BUILD -------------------------
+      # ---------------- BUILD ------------------------
 
       - name: Build firmware
         env:
           MAKEFLAGS: "-j$(nproc)"
         run: |
+          set -euo pipefail
           cd "${WORKDIR}"
+
           make download -j"$(nproc)" || make download -j1 V=s
-          ( time make -j"$(nproc)" V=sc ) 2>&1 | tee build.log
+
+          # run make, log output, and ensure failure is propagated
+          time make -j"$(nproc)" V=sc 2>&1 | tee build.log
 
       # ---------------- ARTIFACTS ---------------------
 
       - name: Collect artifacts
+        if: always()
         run: |
           mkdir -p artifacts
-          cp -a "${WORKDIR}/bin/targets/${OWRT_TARGET}/${OWRT_SUBTARGET}/"* artifacts/ || true
-          cp "${WORKDIR}/.config" artifacts/
-          cp "${WORKDIR}/build.log" artifacts/
+          # Firmware images (might not exist if build failed early)
+          cp -a "${WORKDIR}/bin/targets/${OWRT_TARGET}/${OWRT_SUBTARGET}/"* artifacts/ 2>/dev/null || true
+          # Final .config
+          cp "${WORKDIR}/.config" artifacts/.config 2>/dev/null || true
+          # Build log
+          cp "${WORKDIR}/build.log" artifacts/build.log 2>/dev/null || true
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: firmware-${{ env.PROFILE }}-${{ env.BUILD_DATE }}
           path: artifacts/
