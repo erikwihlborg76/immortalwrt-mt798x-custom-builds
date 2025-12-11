@@ -27,3 +27,4 @@ To enable DFS:
 
 1. Ensure the selected Wi-Fi country has a valid regulatory domain mapping (see `patches/0001-Added-regdomain-field-and-corrected-serveral-allowed.patch`).
 2. Set the 5 GHz Wi-Fi channel to **"auto"**.
+3. x
