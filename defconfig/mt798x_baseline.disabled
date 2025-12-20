@@ -1,0 +1,7 @@
+# It allows Wi-Fi 6 / Wi-Fi 6E (802.11ax) devices to negotiate scheduled
+# wake/sleep times between AP and clients, significantly reducing power 
+# consumption for supported clients.
+CONFIG_MTK_TWT_SUPPORT=y
+
+CONFIG_PACKAGE_TURBOACC_INCLUDE_FLOW_OFFLOADING=y
+
