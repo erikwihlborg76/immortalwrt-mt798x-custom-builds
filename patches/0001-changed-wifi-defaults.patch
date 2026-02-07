@@ -1,23 +1,19 @@
-From c99ba72e3647340b67329c6e9a8d1b8f81b69457 Mon Sep 17 00:00:00 2001
+From 7a9675280cd3d35b9562c4a278e97b57d299432d Mon Sep 17 00:00:00 2001
 From: Erik Wihlborg <erikwihlborg76@gmail.com>
-Date: Sat, 7 Feb 2026 06:59:33 +0100
-Subject: [PATCH] Changed default wifi settings
+Date: Sat, 7 Feb 2026 14:57:11 +0100
+Subject: [PATCH] changed wifi defaults
 
 Signed-off-by: Erik Wihlborg <erikwihlborg76@gmail.com>
 ---
- .../mtk/applications/mtwifi-cfg/files/mtwifi.sh    | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ package/mtk/applications/mtwifi-cfg/files/mtwifi.sh | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
-index c443ac5f85..274be297b1 100755
+index c443ac5f85..bca239005f 100755
 --- a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
 +++ b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
-@@ -20,17 +20,17 @@ detect_mtwifi() {
- 					hwmode="11g"
- 					htmode="HE40"
- 					htbsscoex="1"
--					ssid="ImmortalWrt-2.4G"
-+					ssid="IMMORTALWRT-2G"
+@@ -23,14 +23,14 @@ detect_mtwifi() {
+ 					ssid="ImmortalWrt-2.4G"
  					dbdc_main="1"
  					txpower="100"
 -					channel="auto"
@@ -27,10 +23,9 @@ index c443ac5f85..274be297b1 100755
  					hwmode="11a"
  					htmode="HE160"
  					htbsscoex="0"
--					ssid="ImmortalWrt-5G"
+ 					ssid="ImmortalWrt-5G"
 -					channel="36"
-+					ssid="IMMORTALWRT-5G"
-+					channel="0"
++					channel="auto"
  					txpower="100"
  					dbdc_main="0"
  				fi
@@ -55,5 +50,5 @@ index c443ac5f85..274be297b1 100755
  				uci -q commit wireless
  			}
 -- 
-2.53.0.windows.1
+2.52.0.windows.1
 
