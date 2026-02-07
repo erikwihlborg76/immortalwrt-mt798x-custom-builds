@@ -1,0 +1,59 @@
+From c99ba72e3647340b67329c6e9a8d1b8f81b69457 Mon Sep 17 00:00:00 2001
+From: Erik Wihlborg <erikwihlborg76@gmail.com>
+Date: Sat, 7 Feb 2026 06:59:33 +0100
+Subject: [PATCH] Changed default wifi settings
+
+Signed-off-by: Erik Wihlborg <erikwihlborg76@gmail.com>
+---
+ .../mtk/applications/mtwifi-cfg/files/mtwifi.sh    | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
+index c443ac5f85..274be297b1 100755
+--- a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
++++ b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
+@@ -20,17 +20,17 @@ detect_mtwifi() {
+ 					hwmode="11g"
+ 					htmode="HE40"
+ 					htbsscoex="1"
+-					ssid="ImmortalWrt-2.4G"
++					ssid="IMMORTALWRT-2G"
+ 					dbdc_main="1"
+ 					txpower="100"
+-					channel="auto"
++					channel="6"
+ 				else
+ 					band="5g"
+ 					hwmode="11a"
+ 					htmode="HE160"
+ 					htbsscoex="0"
+-					ssid="ImmortalWrt-5G"
+-					channel="36"
++					ssid="IMMORTALWRT-5G"
++					channel="0"
+ 					txpower="100"
+ 					dbdc_main="0"
+ 				fi
+@@ -44,7 +44,7 @@ detect_mtwifi() {
+ 					set wireless.${dev}.channel=${channel}
+ 					set wireless.${dev}.txpower=${txpower}
+ 					set wireless.${dev}.htmode=${htmode}
+-					set wireless.${dev}.country=CN
++					set wireless.${dev}.country=SE
+ 					set wireless.${dev}.mu_beamformer=1
+ 					set wireless.${dev}.noscan=${htbsscoex}
+ 					set wireless.${dev}.serialize=1
+@@ -54,7 +54,9 @@ detect_mtwifi() {
+ 					set wireless.default_${dev}.network=lan
+ 					set wireless.default_${dev}.mode=ap
+ 					set wireless.default_${dev}.ssid=${ssid}
+-					set wireless.default_${dev}.encryption=none
++					set wireless.default_${dev}.encryption=psk2
++					set wireless.default_${dev}.key=password123
++					set wireless.default_${dev}.ieee80211r='0'
+ EOF
+ 				uci -q commit wireless
+ 			}
+-- 
+2.53.0.windows.1
+
