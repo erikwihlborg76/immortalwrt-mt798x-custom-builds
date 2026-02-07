@@ -232,21 +232,58 @@ jobs:
           time make -j"$(nproc)" V=sc 2>&1 | tee build.log
 
       # ---------------- ARTIFACTS ---------------------
-
-      - name: Collect artifacts
-        if: always()
+      
+      - name: Collect minimal firmware artifacts
+        shell: bash
         run: |
-          mkdir -p artifacts
-          # Firmware images (might not exist if build failed early)
-          cp -a "${WORKDIR}/bin/targets/${OWRT_TARGET}/${OWRT_SUBTARGET}/"* artifacts/ 2>/dev/null || true
-          # Final .config
-          cp "${WORKDIR}/.config" artifacts/.config 2>/dev/null || true
-          # Build log
-          cp "${WORKDIR}/build.log" artifacts/build.log 2>/dev/null || true
+          set -euo pipefail
 
-      - uses: actions/upload-artifact@v4
-        if: always()
+          OUT="${GITHUB_WORKSPACE}/minimal-artifacts"
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+
+          cd "${WORKDIR}"
+
+          # Find all sysupgrade images (generic: .itb, .bin, future-proof)
+          mapfile -t SYSUP < <(
+            find "bin/targets" -type f -name '*-squashfs-sysupgrade.*' | sort
+          )
+
+          if [ "${#SYSUP[@]}" -eq 0 ]; then
+            echo "ERROR: No sysupgrade images found"
+            find "bin/targets" -maxdepth 4 -type f | head -n 200
+            exit 1
+          fi
+
+          echo "Found sysupgrade images:"
+          printf ' - %s\n' "${SYSUP[@]}"
+
+          # Copy build log (global)
+          if [ -f "${WORKDIR}/build.log" ]; then
+            cp -v "${WORKDIR}/build.log" "$OUT/"
+          fi
+
+          for img in "${SYSUP[@]}"; do
+            dir="$(dirname "$img")"
+            echo "Collecting from: $dir"
+
+            # Copy sysupgrade image
+            cp -v "$img" "$OUT/"
+
+            # Copy metadata files if present (from the same folder as sysupgrade)
+            for f in sha256sums profiles.json config.buildinfo version.buildinfo; do
+              if [ -f "$dir/$f" ]; then
+                cp -v "$dir/$f" "$OUT/"
+              fi
+            done
+          done
+
+          echo "Final artifact contents:"
+          ls -lah "$OUT"
+
+      - name: Upload minimal firmware artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ env.PROFILE }}-${{ env.BUILD_DATE }}
-          path: artifacts/
-          retention-days: 14
+          path: minimal-artifacts/
+          if-no-files-found: error
