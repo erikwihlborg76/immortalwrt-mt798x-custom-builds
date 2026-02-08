@@ -1,15 +1,15 @@
-From 7a9675280cd3d35b9562c4a278e97b57d299432d Mon Sep 17 00:00:00 2001
+From b35cfd29b83aa34d6739e75e6456150c99e7796e Mon Sep 17 00:00:00 2001
 From: Erik Wihlborg <erikwihlborg76@gmail.com>
-Date: Sat, 7 Feb 2026 14:57:11 +0100
-Subject: [PATCH] changed wifi defaults
+Date: Sun, 8 Feb 2026 06:17:54 +0100
+Subject: [PATCH] Changed default wifi settings
 
 Signed-off-by: Erik Wihlborg <erikwihlborg76@gmail.com>
 ---
- package/mtk/applications/mtwifi-cfg/files/mtwifi.sh | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ package/mtk/applications/mtwifi-cfg/files/mtwifi.sh | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
-index c443ac5f85..bca239005f 100755
+index c443ac5f85..e3b91c4e23 100755
 --- a/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
 +++ b/package/mtk/applications/mtwifi-cfg/files/mtwifi.sh
 @@ -23,14 +23,14 @@ detect_mtwifi() {
@@ -21,7 +21,8 @@ index c443ac5f85..bca239005f 100755
  				else
  					band="5g"
  					hwmode="11a"
- 					htmode="HE160"
+-					htmode="HE160"
++					htmode="HE80"
  					htbsscoex="0"
  					ssid="ImmortalWrt-5G"
 -					channel="36"
@@ -50,5 +51,5 @@ index c443ac5f85..bca239005f 100755
  				uci -q commit wireless
  			}
 -- 
-2.52.0.windows.1
+2.53.0.windows.1
 
