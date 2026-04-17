@@ -46,8 +46,10 @@ jobs:
 
     env:
       # ---- IMMORTALWRT SOURCE ----
-      REPO_URL: "https://github.com/padavanonly/immortalwrt-mt798x-6.6"
-      BRANCH: "openwrt-24.10-6.6"
+      REPO_URL: "https://github.com/chasey-dev/immortalwrt-mt798x-rebase"
+      BRANCH: "25.12"
+
+      
 
       # ---- CUSTOM REPO ----
       CUSTOM_REPO: "https://github.com/erikwihlborg76/immortalwrt-mt798x-custom-builds"
