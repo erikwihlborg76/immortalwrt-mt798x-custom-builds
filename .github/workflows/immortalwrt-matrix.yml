@@ -225,11 +225,20 @@ jobs:
           # baseline first, then device-specific (device overrides baseline)
           cat "$BASE_CFG" "$DEV_CFG" > .config
 
+          echo "========== MERGED INPUT CONFIG =========="
+          cat .config
+
           # enable ccache
           echo "CONFIG_CCACHE=y" >> .config
 
           # expand into full .config
           make defconfig
+
+          echo "========== GENERATED .CONFIG =========="
+          cat .config
+
+          echo "========== GENERATED TARGET/DEVICE SELECTION =========="
+          grep -E '^CONFIG_TARGET_|^# CONFIG_TARGET_' .config | sort || true
 
       # ---------------- BUILD ------------------------
 
