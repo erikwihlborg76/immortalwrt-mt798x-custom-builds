@@ -16,7 +16,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Find all device configs
         id: set-matrix
@@ -71,7 +71,7 @@ jobs:
       - name: Set build date
         run: echo "BUILD_DATE=$(date +'%Y%m%d')" >> "$GITHUB_ENV"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Free disk (GitHub runners are tiny)
         run: |
