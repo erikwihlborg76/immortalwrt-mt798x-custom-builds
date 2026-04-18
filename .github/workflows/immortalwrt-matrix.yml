@@ -25,10 +25,8 @@ jobs:
           set -euo pipefail
           if [ -d defconfig ]; then
             echo "config_dir=defconfig" >> "$GITHUB_OUTPUT"
-          elif [ -d def_config ]; then
-            echo "config_dir=def_config" >> "$GITHUB_OUTPUT"
           else
-            echo "No config directory found. Expected defconfig/ or def_config/."
+            echo "No config directory found. Expected defconfig/."
             exit 1
           fi
 
@@ -64,8 +62,6 @@ jobs:
       # ---- IMMORTALWRT SOURCE ----
       REPO_URL: "https://github.com/chasey-dev/immortalwrt-mt798x-rebase"
       BRANCH: "25.12"
-
-      
 
       # ---- LOCAL CUSTOMIZATION INPUTS ----
       CONFIG_DIR: "${{ needs.discover-configs.outputs.config_dir }}"
@@ -206,7 +202,7 @@ jobs:
           set -euo pipefail
           cd "${WORKDIR}"
 
-          BASE_CFG="${GITHUB_WORKSPACE}/${CONFIG_DIR}/mt798x_baseline.cfg"
+          BASE_CFG="${GITHUB_WORKSPACE}/${CONFIG_DIR}/mt798x_baseline.config"
           DEV_CFG="${GITHUB_WORKSPACE}/${CONFIG_DIR}/${PROFILE}.config"
 
           if [ ! -f "$BASE_CFG" ]; then
