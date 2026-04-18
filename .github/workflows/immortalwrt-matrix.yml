@@ -36,18 +36,29 @@ jobs:
           set -euo pipefail
           configs=()
           CONFIG_DIR="${{ steps.find-config-dir.outputs.config_dir }}"
+
           for f in "${CONFIG_DIR}"/*.config; do
             [ -e "$f" ] || continue
             base=$(basename "$f" .config)
+            if [ "$base" = "mt798x_baseline" ]; then
+              continue
+            fi
             configs+=("\"$base\"")
           done
 
           if [ "${#configs[@]}" -eq 0 ]; then
-            echo "No ${CONFIG_DIR}/*.config files found!"
+            echo "No device profiles found in ${CONFIG_DIR}/."
+            echo "Expected one or more '*.config' files other than mt798x_baseline.config."
             exit 1
           fi
 
+          echo "Found ${#configs[@]} profile(s):"
+          for profile in "${configs[@]}"; do
+            echo " - ${profile//\"/}"
+          done
+
           json=$(printf "{ \"profile\": [ %s ] }" "$(IFS=,; echo "${configs[*]}")")
+          echo "Generated matrix JSON: $json"
           echo "matrix=$json" >> "$GITHUB_OUTPUT"
 
   build:
