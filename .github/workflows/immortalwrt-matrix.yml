@@ -120,13 +120,13 @@ jobs:
       # ------------------- CACHES --------------------
 
       - name: Cache downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.WORKDIR }}/dl
           key: dl-${{ runner.os }}-${{ env.BRANCH }}-${{ matrix.profile }}
 
       - name: Cache ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os }}-${{ matrix.profile }}-${{ github.sha }}
@@ -262,16 +262,6 @@ jobs:
             time make -j"$(nproc)" V=sc
           } 2>&1 | tee build.log
 
-      - name: Upload build logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: logs-${{ env.PROFILE }}-${{ github.run_attempt }}
-          path: |
-            ${{ env.WORKDIR }}/build.log
-            ${{ env.WORKDIR }}/.config
-          if-no-files-found: warn
-
       # ---------------- ARTIFACTS ---------------------
       
       - name: Collect minimal firmware artifacts
@@ -323,7 +313,7 @@ jobs:
           ls -lah "$OUT"
 
       - name: Upload minimal firmware artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: firmware-${{ env.PROFILE }}-${{ env.BUILD_DATE }}
           path: minimal-artifacts/
