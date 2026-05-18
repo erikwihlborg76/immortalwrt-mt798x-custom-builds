@@ -251,15 +251,15 @@ jobs:
 
       - name: Build firmware
         env:
-          MAKEFLAGS: "-j$(nproc)"
+          MAKEFLAGS: "-j1"
         run: |
           set -euo pipefail
           cd "${WORKDIR}"
           {
-            make download -j"$(nproc)" || make download -j1 V=s
+            make download -j1 || make download -j1 V=s
 
             # run make, log output, and ensure failure is propagated
-            time make -j"$(nproc)" V=sc
+            time make -j1 V=sc
           } 2>&1 | tee build.log
 
       # ---------------- ARTIFACTS ---------------------
