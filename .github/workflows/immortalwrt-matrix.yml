@@ -5,13 +5,83 @@ on:
     branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
+  schedule:
+    - cron: '17 3 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # ---- IMMORTALWRT SOURCE ----
+  #REPO_URL: "https://github.com/chasey-dev/immortalwrt-mt798x-rebase"
+  #BRANCH: "25.12"
+  REPO_URL: "https://github.com/SuperKali/immortalwrt-mt798x-rebase"
+  BRANCH: "25.12-linkup"
+
 jobs:
+  check-upstream:
+    runs-on: ubuntu-22.04
+    outputs:
+      should_build: ${{ steps.decision.outputs.should_build }}
+      upstream_sha: ${{ steps.upstream.outputs.sha }}
+      cache_key: ${{ steps.upstream.outputs.cache_key }}
+    steps:
+      - name: Resolve upstream commit
+        id: upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            sha="$(git ls-remote --heads "${REPO_URL}" "${BRANCH}" | awk '{print $1}')"
+            if [ -z "$sha" ]; then
+              echo "ERROR: Could not resolve ${REPO_URL} branch ${BRANCH}"
+              exit 1
+            fi
+          else
+            sha="event-${GITHUB_SHA}"
+          fi
+
+          repo_key="$(printf '%s' "${REPO_URL}|${BRANCH}" | sha256sum | awk '{print $1}')"
+
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          echo "cache_key=upstream-built-${repo_key}-${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare upstream build stamp
+        if: github.event_name == 'schedule'
+        run: mkdir -p .upstream-build-stamp
+
+      - name: Restore upstream build stamp
+        id: stamp
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v5
+        with:
+          path: .upstream-build-stamp
+          key: ${{ steps.upstream.outputs.cache_key }}
+
+      - name: Decide whether to build
+        id: decision
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ steps.stamp.outputs.cache-hit }}" = "true" ]; then
+            echo "Upstream ${REPO_URL}@${BRANCH} is still ${{ steps.upstream.outputs.sha }}; skipping scheduled build."
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Upstream ${REPO_URL}@${BRANCH} has not been built at ${{ steps.upstream.outputs.sha }}; continuing."
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
   discover-configs:
+    needs: check-upstream
+    if: needs.check-upstream.outputs.should_build == 'true'
     runs-on: ubuntu-22.04
     outputs:
       config_dir: ${{ steps.find-config-dir.outputs.config_dir }}
@@ -70,12 +140,6 @@ jobs:
       matrix: ${{ fromJson(needs.discover-configs.outputs.matrix) }}
 
     env:
-      # ---- IMMORTALWRT SOURCE ----
-      #REPO_URL: "https://github.com/chasey-dev/immortalwrt-mt798x-rebase"
-      #BRANCH: "25.12"
-      REPO_URL: "https://github.com/SuperKali/immortalwrt-mt798x-rebase"
-      BRANCH: "25.12-linkup"
-
       # ---- LOCAL CUSTOMIZATION INPUTS ----
       CONFIG_DIR: "${{ needs.discover-configs.outputs.config_dir }}"
 
@@ -320,3 +384,28 @@ jobs:
           name: firmware-${{ env.PROFILE }}-${{ env.BUILD_DATE }}
           path: minimal-artifacts/
           if-no-files-found: error
+
+  mark-upstream-built:
+    needs:
+      - check-upstream
+      - build
+    if: github.event_name == 'schedule' && needs.check-upstream.outputs.should_build == 'true' && needs.build.result == 'success'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Write upstream build stamp
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .upstream-build-stamp
+          {
+            echo "repo=${REPO_URL}"
+            echo "branch=${BRANCH}"
+            echo "sha=${{ needs.check-upstream.outputs.upstream_sha }}"
+            echo "built_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } > .upstream-build-stamp/build.txt
+
+      - name: Save upstream build stamp
+        uses: actions/cache/save@v5
+        with:
+          path: .upstream-build-stamp
+          key: ${{ needs.check-upstream.outputs.cache_key }}
