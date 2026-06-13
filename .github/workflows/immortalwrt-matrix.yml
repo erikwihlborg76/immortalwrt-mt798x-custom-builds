@@ -234,7 +234,18 @@ jobs:
           echo "Found ${#PATCHES[@]} patch(es). Applying now:"
           for p in "${PATCHES[@]}"; do
             echo " -> $(realpath --relative-to="${PATCH_ROOT}" "$p")"
-            # Normalize CRLF and drop a UTF-8 BOM if an editor added one.
+            # Convert UTF-16 patches saved by Windows editors, then normalize
+            # CRLF and drop a UTF-8 BOM if an editor added one.
+            case "$(head -c 2 "$p" | od -An -tx1 | tr -d ' \n')" in
+              fffe)
+                iconv -f UTF-16LE -t UTF-8 "$p" > "$p.utf8"
+                mv "$p.utf8" "$p"
+                ;;
+              feff)
+                iconv -f UTF-16BE -t UTF-8 "$p" > "$p.utf8"
+                mv "$p.utf8" "$p"
+                ;;
+            esac
             sed -i '1s/^\xEF\xBB\xBF//;s/\r$//' "$p"
 
             # git am only accepts mailbox/format-patch input. Plain diff --git
