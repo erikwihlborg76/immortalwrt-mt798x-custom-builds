@@ -234,18 +234,23 @@ jobs:
           echo "Found ${#PATCHES[@]} patch(es). Applying now:"
           for p in "${PATCHES[@]}"; do
             echo " -> $(realpath --relative-to="${PATCH_ROOT}" "$p")"
-            # Normalize CRLF
-            sed -i 's/\r$//' "$p"
+            # Normalize CRLF and drop a UTF-8 BOM if an editor added one.
+            sed -i '1s/^\xEF\xBB\xBF//;s/\r$//' "$p"
 
-            # Try git am first (best for format-patch)
-            if git am --keep-cr --3way --whitespace=fix "$p"; then
-              continue
+            # git am only accepts mailbox/format-patch input. Plain diff --git
+            # patches should go straight to git apply, otherwise git am emits
+            # "Patch format detection failed" before the real apply attempt.
+            if head -n 1 "$p" | grep -Eq '^From [0-9a-f]{40} '; then
+              if git am --keep-cr --3way --whitespace=fix "$p"; then
+                continue
+              fi
+              git am --abort || true
             fi
 
-            # Fallback to git apply with varying strip levels
-            git am --abort || true
+            # Fallback to git apply with varying strip levels. Prefer -p1 for
+            # git diffs containing a/ and b/ prefixes.
             applied=0
-            for STRIP in 0 1 2; do
+            for STRIP in 1 0 2; do
               if git apply --check --whitespace=fix -p${STRIP} "$p"; then
                 git apply --whitespace=fix -p${STRIP} "$p"
                 git add -A
