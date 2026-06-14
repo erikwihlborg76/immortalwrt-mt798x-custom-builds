@@ -1,5 +1,5 @@
 diff --git a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc b/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
-index 156b2667bb..f6aec1363a 100644
+index 156b2667bb..8be2fce48d 100644
 --- a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
 +++ b/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
 @@ -134,20 +134,36 @@ export function convert(uci_cfg) {
@@ -19,7 +19,7 @@ index 156b2667bb..f6aec1363a 100644
 +				dat.RDRegion = rd;
 +				dat.IEEE80211H = "1";
 +				dat.DfsEnable = "1";
-+				dat.DfsDedicatedZeroWait = "3";
++				dat.DfsDedicatedZeroWait = (bw_res.VHT_BW == "2") ? "3" : "2";
 +				dat.DfsZeroWait = "1";
 +				dat.DfsZeroWaitCacTime = "255";
 +				dat.DfsZeroWaitDefault = "1";
