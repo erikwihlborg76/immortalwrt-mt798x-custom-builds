@@ -2,7 +2,7 @@ diff --git a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtw
 index 156b2667bb..f6aec1363a 100644
 --- a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
 +++ b/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
-@@ -134,20 +134,36 @@ export function convert(uci_cfg) {
+@@ -134,20 +134,40 @@ export function convert(uci_cfg) {
  	let wmode_int = calc_wireless_mode(conf.band, conf.htmode);
  	dat.WirelessMode = wmode_int;
  	let is_ax = (wmode_int >= 16); // for TWT checking, etc.
@@ -12,26 +12,30 @@ index 156b2667bb..f6aec1363a 100644
  	if (conf.channel == "auto") {
  		dat.AutoChannelSelect = "3";
  		dat.Channel = "0";
-+
-+		if (conf.band == "5g" && regions && regions[1] != null) {
-+			let rd = regions[2];
-+			if (rd && rd != "NA") {
-+				dat.RDRegion = rd;
-+				dat.IEEE80211H = "1";
-+				dat.DfsEnable = "1";
-+				dat.DfsDedicatedZeroWait = "3";
-+				dat.DfsZeroWait = "1";
-+				dat.DfsZeroWaitCacTime = "255";
-+				dat.DfsZeroWaitDefault = "1";
-+			} else {
-+				dat.IEEE80211H = "0";
-+				dat.DfsEnable = "0";
-+			}
-+		}
  	} else {
  		dat.AutoChannelSelect = "0";
  		dat.Channel = conf.channel;
  	}
++
++	if (conf.band == "5g" && regions && regions[1] != null) {
++		let rd = regions[2];
++		if (rd && rd != "NA") {
++			dat.RDRegion = rd;
++			dat.IEEE80211H = "1";
++			dat.DfsEnable = "1";
++
++			dat.DfsDedicatedZeroWait = (bw_res.VHT_BW == "2") ? "3" : "2";
++			dat.DfsZeroWait = "1";
++			dat.DfsZeroWaitCacTime = "255";
++			dat.DfsZeroWaitDefault = "1";
++		} else {
++			dat.IEEE80211H = "0";
++			dat.DfsEnable = "0";
++			dat.DfsDedicatedZeroWait = "0";
++			dat.DfsZeroWait = "0";
++			dat.DfsZeroWaitDefault = "0";
++		}
++	}
  
  	// CountryRegion code
 -	if (conf.country && length(conf.country) == 2) {
@@ -41,7 +45,7 @@ index 156b2667bb..f6aec1363a 100644
  		if (conf.band == "2g") {
  			dat.CountryRegion = regions[0];
  		} else {
-@@ -386,4 +402,4 @@ export function convert(uci_cfg) {
+@@ -386,4 +406,4 @@ export function convert(uci_cfg) {
  	}
  
  	return dat;
