@@ -15,9 +15,9 @@ Current targets:
 
 ## Installation
 
-Compiled builds are published via **GitHub Actions**:
+Compiled builds from successful non-PR runs are published as draft **GitHub Releases** for people with write access:
 
-- Download and unzip the release artifacts (ignore the `packages` folder).
+- Open the draft release and download the zipped firmware asset for your device.
 - Flash the `*squashfs-sysupgrade.itb` file to a supported device already running **OpenWrt/ImmortalWrt ubootmod**.
 
 ## DFS with zero/wait usage notes
