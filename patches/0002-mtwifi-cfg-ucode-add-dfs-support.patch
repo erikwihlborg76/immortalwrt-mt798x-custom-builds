@@ -2,7 +2,7 @@ diff --git a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtw
 index 156b2667bb..8be2fce48d 100644
 --- a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
 +++ b/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
-@@ -134,20 +134,40 @@ export function convert(uci_cfg) {
+@@ -134,20 +134,41 @@ export function convert(uci_cfg) {
  	let wmode_int = calc_wireless_mode(conf.band, conf.htmode);
  	dat.WirelessMode = wmode_int;
  	let is_ax = (wmode_int >= 16); // for TWT checking, etc.
@@ -24,7 +24,8 @@ index 156b2667bb..8be2fce48d 100644
 +			dat.IEEE80211H = "1";
 +			dat.DfsEnable = "1";
 +
-+			dat.DfsDedicatedZeroWait = (bw_res.VHT_BW == "2") ? "3" : "2";
++			// MTK value 3 is DFS_ADJ_BW_ZERO_WAIT and keeps HE160 anchored on ch36.
++			dat.DfsDedicatedZeroWait = "2";
 +			dat.DfsZeroWait = "1";
 +			dat.DfsZeroWaitCacTime = "255";
 +			dat.DfsZeroWaitDefault = "1";
