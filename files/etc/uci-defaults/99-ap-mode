@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# Configure the image to boot as a dumb AP on the existing LAN bridge.
+
+uci -q batch <<'EOF'
+set network.lan.proto='static'
+delete network.lan.ipaddr
+add_list network.lan.ipaddr='10.0.0.9/24'
+delete network.lan.netmask
+delete network.lan.ip6assign
+delete network.lan.gateway
+delete network.lan.dns
+commit network
+EOF
+
+uci -q get dhcp.lan >/dev/null || {
+	uci -q batch <<'EOF'
+set dhcp.lan='dhcp'
+set dhcp.lan.interface='lan'
+EOF
+}
+
+uci -q batch <<'EOF'
+set dhcp.lan.ignore='1'
+set dhcp.lan.dhcpv4='disabled'
+set dhcp.lan.dhcpv6='disabled'
+set dhcp.lan.ra='disabled'
+set dhcp.lan.ndp='disabled'
+commit dhcp
+EOF
+
+exit 0
