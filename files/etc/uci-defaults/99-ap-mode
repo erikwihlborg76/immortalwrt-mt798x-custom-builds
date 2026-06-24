@@ -8,8 +8,9 @@ delete network.lan.ipaddr
 add_list network.lan.ipaddr='10.0.0.9/24'
 delete network.lan.netmask
 delete network.lan.ip6assign
-delete network.lan.gateway
+set network.lan.gateway='10.0.0.1'
 delete network.lan.dns
+add_list network.lan.dns='10.0.0.1'
 commit network
 EOF
 
