@@ -1,8 +1,8 @@
 diff --git a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc b/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
-index 156b2667bb..8be2fce48d 100644
+index 022b2b6941..de8fd20f8d 100644
 --- a/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
 +++ b/package/mtk/applications/mtwifi-cfg-ucode/files/usr/share/ucode/mtwifi/converter.uc
-@@ -134,20 +134,41 @@ export function convert(uci_cfg) {
+@@ -134,6 +134,7 @@ export function convert(uci_cfg) {
  	let wmode_int = calc_wireless_mode(conf.band, conf.htmode);
  	dat.WirelessMode = wmode_int;
  	let is_ax = (wmode_int >= 16); // for TWT checking, etc.
@@ -10,13 +10,10 @@ index 156b2667bb..8be2fce48d 100644
  
  	// Channel, check auto or not
  	if (conf.channel == "auto") {
- 		dat.AutoChannelSelect = "3";
- 		dat.Channel = "0";
- 	} else {
- 		dat.AutoChannelSelect = "0";
+@@ -144,10 +145,33 @@ export function convert(uci_cfg) {
  		dat.Channel = conf.channel;
  	}
-+
+ 
 +	if (conf.band == "5g" && regions && regions[1] != null) {
 +		let rd = regions[2];
 +		if (rd && rd != "NA") {
@@ -24,12 +21,15 @@ index 156b2667bb..8be2fce48d 100644
 +			dat.IEEE80211H = "1";
 +			dat.DfsEnable = "1";
 +
-+			// MTK value 3 is DFS_ADJ_BW_ZERO_WAIT and keeps HE160 anchored on ch36.
++			// MTK value 2 enables the default dedicated zero-wait flow.
++			// Value 3 is the MT7986-specific adjacent-bandwidth HE160 mode.
 +			dat.DfsDedicatedZeroWait = "2";
 +			dat.DfsZeroWait = "1";
 +			dat.DfsZeroWaitCacTime = "255";
 +			dat.DfsZeroWaitDefault = "1";
 +		} else {
++			// RDRegion has no disabled value; clear any previously configured domain.
++			dat.RDRegion = "";
 +			dat.IEEE80211H = "0";
 +			dat.DfsEnable = "0";
 +			dat.DfsDedicatedZeroWait = "0";
@@ -37,7 +37,7 @@ index 156b2667bb..8be2fce48d 100644
 +			dat.DfsZeroWaitDefault = "0";
 +		}
 +	}
- 
++
  	// CountryRegion code
 -	if (conf.country && length(conf.country) == 2) {
 +	if (regions) {
@@ -46,7 +46,7 @@ index 156b2667bb..8be2fce48d 100644
  		if (conf.band == "2g") {
  			dat.CountryRegion = regions[0];
  		} else {
-@@ -386,4 +406,4 @@ export function convert(uci_cfg) {
+@@ -377,4 +401,4 @@ export function convert(uci_cfg) {
  	}
  
  	return dat;

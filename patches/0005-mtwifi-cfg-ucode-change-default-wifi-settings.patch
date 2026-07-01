@@ -1,28 +1,9 @@
 diff --git a/package/mtk/applications/mtwifi-cfg-ucode/files/lib/wifi/mtwifi.uc b/package/mtk/applications/mtwifi-cfg-ucode/files/lib/wifi/mtwifi.uc
-index 5a377a0a0a..060d0c6547 100755
+index 5a377a0a0a..e71241c1d5 100755
 --- a/package/mtk/applications/mtwifi-cfg-ucode/files/lib/wifi/mtwifi.uc
 +++ b/package/mtk/applications/mtwifi-cfg-ucode/files/lib/wifi/mtwifi.uc
-@@ -44,11 +44,11 @@ let all_devnames = l1.list();
- // helper to set default settings by band
- function get_band_defaults(band) {
-     if (band == "2g") {
--        return { htmode: "HE40", htbsscoex: 1, ssid: "ImmortalWrt-2.4G" };
-+        return { channel: "6", htmode: "HE40", htbsscoex: 1, ssid: "ImmortalWrt-2.4G" };
-     } else if (band == "5g") {
--        return { htmode: "HE160", htbsscoex: 0, ssid: "ImmortalWrt-5G" };
-+        return { channel: "auto", htmode: "HE80", htbsscoex: 0, ssid: "ImmortalWrt-5G" };
-     } else {
--        return { htmode: "HE160", htbsscoex: 0, ssid: "ImmortalWrt-6G" };
-+        return { channel: "auto", htmode: "HE160", htbsscoex: 0, ssid: "ImmortalWrt-6G" };
-     }
- }
- 
-@@ -91,10 +91,10 @@ for (let devname in all_devnames) {
-         "phy": cur_dev.main_ifname,
-         "band": band,
-         "dbdc_main": dbdc_main,
--        "channel": "auto",
-+        "channel": defs.channel,
+@@ -94,7 +94,7 @@ for (let devname in all_devnames) {
+         "channel": "auto",
          "txpower": 100,
          "htmode": defs.htmode,
 -        "country": "CN",
@@ -30,21 +11,13 @@ index 5a377a0a0a..060d0c6547 100755
          "mu_beamformer": 1,
          "noscan": defs.htbsscoex,
          "serialize": 1
-@@ -110,7 +110,9 @@ for (let devname in all_devnames) {
+@@ -110,7 +110,8 @@ for (let devname in all_devnames) {
          "network": "lan",
          "mode": "ap",
          "ssid": defs.ssid,
 -        "encryption": "none"
 +        "encryption": "psk2",
-+        "key": "password123",
-+        "ieee80211r": 0
++        "key": "password123"
      });
  
      need_commit = true;
-@@ -121,4 +123,4 @@ l1.close();
- // commit in one shot
- if (need_commit) {
-     cursor.commit("wireless");
--}
-\ No newline at end of file
-+}

@@ -5,12 +5,12 @@
 uci -q batch <<'EOF'
 set network.lan.proto='static'
 delete network.lan.ipaddr
-add_list network.lan.ipaddr='192.168.1.9/24'
+add_list network.lan.ipaddr='10.0.0.9/24'
 delete network.lan.netmask
 delete network.lan.ip6assign
-set network.lan.gateway='192.168.1.1'
+set network.lan.gateway='10.0.0.1'
 delete network.lan.dns
-add_list network.lan.dns='192.168.1.1'
+add_list network.lan.dns='10.0.0.1'
 commit network
 EOF
 

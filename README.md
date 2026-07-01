@@ -1,7 +1,7 @@
 # Experimental ImmortalWrt Builds for mt798x
 
 This repository builds custom firmware images based on
-[SuperKali/immortalwrt-mt798x-rebase](https://github.com/SuperKali/immortalwrt-mt798x-rebase),
+[chasey-dev/immortalwrt-mt798x-rebase](https://github.com/chasey-dev/immortalwrt-mt798x-rebase),
 branch `25.12-linkup`.
 
 The GitHub Actions workflow clones that upstream tree, applies local patches from
@@ -34,7 +34,7 @@ Network defaults from `files/etc/uci-defaults/99-ap-mode`:
 Wi-Fi defaults from `patches/0005-mtwifi-cfg-ucode-change-default-wifi-settings.patch`:
 
 - Wi-Fi country defaults to `SE`.
-- 2.4 GHz defaults to channel `6`, `HE40`, SSID `ImmortalWrt-2.4G`.
+- 2.4 GHz defaults to channel `auto`, `HE40`, SSID `ImmortalWrt-2.4G`.
 - 5 GHz defaults to channel `auto`, `HE80`, SSID `ImmortalWrt-5G`.
 - 6 GHz defaults to channel `auto`, `HE160`, SSID `ImmortalWrt-6G`.
 - Default wireless mode is AP on the `lan` network.
